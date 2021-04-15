@@ -22,6 +22,8 @@ import android.widget.ImageView;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
     static final int REQUES_IMAGE_CAPTURE = 1;
@@ -82,7 +84,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private File crearImagen() throws IOException {
-        String nombreImagen = "foto_";
+        String timeStamp = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss-ms").format(new Date());
+        String nombreImagen = "foto"+timeStamp+"_";
         File directorio = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File imagen = File.createTempFile(nombreImagen , ".jpg",directorio);
 
