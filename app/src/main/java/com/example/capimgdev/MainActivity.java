@@ -1,4 +1,4 @@
-package com.example.capimgdev;
+blapackage com.example.capimgdev;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -10,6 +10,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,6 +20,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+
+import com.example.capimgdev.R;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,5 +94,27 @@ public class MainActivity extends AppCompatActivity {
 
         currentPhotoPath = imagen.getAbsolutePath();
         return imagen;
+    }
+
+    private boolean safeCameraOpen (int id){
+        boolean qOpened = false;
+
+        try {
+            releaseCameraandPreview();
+            camera = Camera.open(id);
+            qOpened = (camera != null);
+        } catch (Exception e){
+            Log.e(getString(R.string.app_name), "Failed to open Camera");
+            e.printStackTrace();
+        }
+        return qOpened;
+    }
+
+    private void releaseCameraandPreview(){
+        preview.setCamera(null);
+        if (camera != null){
+            camera.release();
+            camera = null;
+        }
     }
 }
