@@ -1,5 +1,6 @@
-blapackage com.example.capimgdev;
+package com.example.capimgdev;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,17 +8,23 @@ import androidx.core.content.FileProvider;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.hardware.camera2.CameraDevice;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Size;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 
@@ -27,12 +34,14 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     static final int REQUES_IMAGE_CAPTURE = 1;
     Button BtnCamera;
     ImageView imageView;
     String currentPhotoPath;
+    Camera mCamera;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -96,13 +105,15 @@ public class MainActivity extends AppCompatActivity {
         return imagen;
     }
 
+//    Apertura del objeto camara
+
     private boolean safeCameraOpen (int id){
         boolean qOpened = false;
 
         try {
             releaseCameraandPreview();
-            camera = Camera.open(id);
-            qOpened = (camera != null);
+            mCamera = Camera.open(id);
+            qOpened = (mCamera != null);
         } catch (Exception e){
             Log.e(getString(R.string.app_name), "Failed to open Camera");
             e.printStackTrace();
@@ -112,9 +123,131 @@ public class MainActivity extends AppCompatActivity {
 
     private void releaseCameraandPreview(){
         preview.setCamera(null);
-        if (camera != null){
-            camera.release();
-            camera = null;
+        if (mCamera != null){
+            mCamera.release();
+            mCamera = null;
         }
     }
+
+//    Creacion de la vista previa de la camara
+class Preview extends ViewGroup implements SurfaceHolder.Callback {
+
+    SurfaceView surfaceView;
+    SurfaceHolder holder;
+
+    Preview(Context context) {
+        super(context);
+
+        surfaceView = new SurfaceView(context);
+        addView(surfaceView);
+
+        // Install a SurfaceHolder.Callback so we get notified when the
+        // underlying surface is created and destroyed.
+        holder = surfaceView.getHolder();
+        holder.addCallback(this);
+        holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+
+    }
+
+    @Override
+    public void surfaceCreated(@NonNull SurfaceHolder holder) {
+
+    }
+
+    @Override
+    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
+
+    }
+
+    @Override
+    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
+
+    }
+}
+
+public void setCamera (Camera camera){
+        if (mCamera == camera) { return;}
+
+        stopPreviewAndFreeCamera();
+
+        mCamera = camera;
+
+        if (mCamera != null){
+            List<Size> localSizes = mCamera.getParameters().getSupportedPreviewSizes();
+            supportedPreviewSizes = localSizes;
+            requestLayout();
+
+            try {
+                mCamera.setPreviewDisplay(holder);
+                } catch (IOException e){
+                    e.printStackTrace();
+                }
+
+//                Important: Call startPreview() to start updating the preview
+//                surface. Preview must be started before you can take a picture.
+                mCamera.startPreview();
+        }
+}
+
+//Modificar la configuracion de camara
+
+    @Override
+    public void surfaceChanged (SurfaceHolder holder, int format, int w, int h){
+//        Now that the size is known, set up the camera parameters and begin the preview
+        Camera.Parameters parameters = mCamera.getParameters();
+        parameters.setPreviewSize(previewSize.width, previewSize.height);
+        requestLayout();
+        mCamera.setParameters(parameters);
+
+//        Important: Call startPreview() to start updating the preview surface
+//        Preview must be started before you can take a picture.
+        mCamera.startPreview();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch(previewState) {
+            case K_STATE_FROZEN:
+                camera.startPreview();
+                previewState = K_STATE_PREVIEW;
+                break;
+
+            default:
+                camera.takePicture( null, rawCallback, null);
+                previewState = K_STATE_BUSY;
+        } // switch
+        shutterBtnConfig();
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        // Surface will be destroyed when we return, so stop the preview.
+        if (mCamera != null) {
+            // Call stopPreview() to stop updating the preview surface.
+            mCamera.stopPreview();
+        }
+    }
+
+    /**
+     * When this function returns, mCamera will be null.
+     */
+    private void stopPreviewAndFreeCamera() {
+
+        if (mCamera != null) {
+            // Call stopPreview() to stop updating the preview surface.
+            mCamera.stopPreview();
+
+            // Important: Call release() to release the camera for use by other
+            // applications. Applications should release the camera immediately
+            // during onPause() and re-open() it during onResume()).
+            mCamera.release();
+
+            mCamera = null;
+        }
+    }
+
 }
