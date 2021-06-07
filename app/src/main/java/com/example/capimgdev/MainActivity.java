@@ -26,22 +26,28 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectStreamField;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
+
 public class MainActivity extends AppCompatActivity {
     static final int REQUES_IMAGE_CAPTURE = 1;
     Button BtnCamera;
-    ImageView imageView;
+    private CameraPreview mPreview;
     String currentPhotoPath;
-    Camera mCamera = null;
+    private Camera mCamera;
     private SurfaceHolder mHolder;
+    private int i=1;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -53,30 +59,51 @@ public class MainActivity extends AppCompatActivity {
         requestPermissions(new String[]{ Manifest.permission.CAMERA }, 1);
         requestPermissions(new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
 
-        //Instancio la camara
-        try{
-            mCamera = Camera.open();
-        }catch (Exception e){
-            // La camara no esta disponible
-            Toast.makeText(this,"La camara no esta disponible", Toast.LENGTH_LONG).show();
+        //genero un instanciado para la camara
+        mCamera = getCameraInstance();
 
-        }
-
+        //Creo una vista previa y le coloco el contenido de la actividad
+        mPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        preview.addView(mPreview);
 
         BtnCamera = findViewById(R.id.button_capture);
-        //mHolder = findViewById(R.id.camera_preview);
+//        mPreview = findViewById(R.id.camera_preview);
 
         BtnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
             //dispatchTakePictureIntent();
+//                for(i=1;i<=5;i++){
+                    mCamera.takePicture(null,null, mPicture);
+//                    try {
+//                        wait(1);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+
+//                }
+
             }
         });
     }
 
     // Se comienza el desarrollo pra el objeto camara y manejarlo de manera manual
+// se consigue un instanciado de camra
+    public Camera getCameraInstance(){
+        Camera c = null;
+        try {
+            c = Camera.open(2); // attempt to get a Camera instance
+        }
+        catch (Exception e){
+            Toast.makeText(this, "La camara no esta disponible",Toast.LENGTH_LONG).show();
+            // Camera is not available (in use or does not exist)
+        }
+        return c; // returns null if camera is unavailable
+    }
 
 
+    // Genero una vista previa de lo que esta viendo la camara para poder hacer las capturas
     public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback{
 
 
@@ -140,6 +167,45 @@ public class MainActivity extends AppCompatActivity {
 
             mCamera.release();
         }
+    }
+
+    // Se desarrolla la captura de imagenes
+    private Camera.PictureCallback mPicture = new Camera.PictureCallback() {
+
+        @Override
+        public void onPictureTaken(byte[] data, Camera camera) {
+
+            File pictureFile = null;
+            try{
+                pictureFile = crearImagen();
+            }catch (IOException e){
+
+            }
+            if (pictureFile == null){
+//                Log.d(TAG, "Error creating media file, check storage permissions");
+                return;
+            }
+
+            try {
+                FileOutputStream fos = new FileOutputStream(pictureFile);
+                fos.write(data);
+                fos.close();
+            } catch (FileNotFoundException e) {
+//                Log.d(TAG, "File not found: " + e.getMessage());
+            } catch (IOException e) {
+//                Log.d(TAG, "Error accessing file: " + e.getMessage());
+            }
+        }
+    };
+
+    private File crearImagen() throws IOException {
+        String timeStamp = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss-ms").format(new Date());
+        String nombreImagen = "foto"+timeStamp+"_";
+        File directorio = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File imagen = File.createTempFile(nombreImagen , ".jpg",directorio);
+
+        currentPhotoPath = imagen.getAbsolutePath();
+        return imagen;
     }
     // FIN DEL DESARROLLO DE LA CAMARA MANUAL
 
