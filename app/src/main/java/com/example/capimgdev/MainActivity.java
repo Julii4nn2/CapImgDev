@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
     String currentPhotoPath;
     private Camera mCamera;
     private SurfaceHolder mHolder;
-    private int i=1;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -60,7 +59,8 @@ public class MainActivity extends AppCompatActivity {
         requestPermissions(new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
 
         //genero un instanciado para la camara
-        mCamera = getCameraInstance();
+        mCamera = getCameraInstance(2);
+
 
         //Creo una vista previa y le coloco el contenido de la actividad
         mPreview = new CameraPreview(this, mCamera);
@@ -68,21 +68,11 @@ public class MainActivity extends AppCompatActivity {
         preview.addView(mPreview);
 
         BtnCamera = findViewById(R.id.button_capture);
-//        mPreview = findViewById(R.id.camera_preview);
 
         BtnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            //dispatchTakePictureIntent();
-//                for(i=1;i<=5;i++){
                     mCamera.takePicture(null,null, mPicture);
-//                    try {
-//                        wait(1);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-
-//                }
 
             }
         });
@@ -90,10 +80,10 @@ public class MainActivity extends AppCompatActivity {
 
     // Se comienza el desarrollo pra el objeto camara y manejarlo de manera manual
 // se consigue un instanciado de camra
-    public Camera getCameraInstance(){
+    public Camera getCameraInstance(int cameraselection){
         Camera c = null;
         try {
-            c = Camera.open(2); // attempt to get a Camera instance
+            c = Camera.open(cameraselection); // attempt to get a Camera instance
         }
         catch (Exception e){
             Toast.makeText(this, "La camara no esta disponible",Toast.LENGTH_LONG).show();
@@ -210,46 +200,4 @@ public class MainActivity extends AppCompatActivity {
     // FIN DEL DESARROLLO DE LA CAMARA MANUAL
 
 
-//    private void dispatchTakePictureIntent(){
-//        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//        if(takePictureIntent.resolveActivity(getPackageManager()) != null){
-//
-//            File imagenArchivo = null;
-//
-//            try{
-//                imagenArchivo = crearImagen();
-//            } catch (IOException ex){
-//                Log.e("Error",ex.toString());
-//            }
-//            if(imagenArchivo != null){
-//                Uri fotoUri = FileProvider.getUriForFile(this, "com.example.capimgdev.fileprovider", imagenArchivo);
-//                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, fotoUri);
-//                startActivityForResult(takePictureIntent, REQUES_IMAGE_CAPTURE);
-//            }
-//        }
-//    }
-//
-//
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        if(requestCode == REQUES_IMAGE_CAPTURE && resultCode == RESULT_OK){
-//            //Modifico el muestreo para que lo haga con el archivo guardado.
-//            //Bundle extras = data.getExtras();
-//            //Bitmap imageBitmap = (Bitmap) extras.get("data");
-//            //imageView.setImageBitmap(imageBitmap);
-//
-//            Bitmap imageBitmap = BitmapFactory.decodeFile(currentPhotoPath);
-//            imageView.setImageBitmap(imageBitmap);
-//
-//        }
-//    }
-//
-//    private File crearImagen() throws IOException {
-//        String timeStamp = new SimpleDateFormat("dd-MM-yyyy_HH-mm-ss-ms").format(new Date());
-//        String nombreImagen = "foto"+timeStamp+"_";
-//        File directorio = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-//        File imagen = File.createTempFile(nombreImagen , ".jpg",directorio);
-//
-//        currentPhotoPath = imagen.getAbsolutePath();
-//        return imagen;
-//    }
 }
