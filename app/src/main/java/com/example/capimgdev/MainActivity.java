@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                     mCamera.takePicture(null,null, mPicture);
-
             }
         });
     }
@@ -180,12 +179,14 @@ public class MainActivity extends AppCompatActivity {
                 FileOutputStream fos = new FileOutputStream(pictureFile);
                 fos.write(data);
                 fos.close();
+                mCamera.startPreview();
             } catch (FileNotFoundException e) {
 //                Log.d(TAG, "File not found: " + e.getMessage());
             } catch (IOException e) {
 //                Log.d(TAG, "Error accessing file: " + e.getMessage());
             }
         }
+
     };
 
     private File crearImagen() throws IOException {
