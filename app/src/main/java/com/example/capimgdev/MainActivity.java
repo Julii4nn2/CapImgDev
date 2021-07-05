@@ -42,11 +42,12 @@ import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
 
 public class MainActivity extends AppCompatActivity {
     static final int REQUES_IMAGE_CAPTURE = 1;
-    Button BtnCamera;
+    Button BtnCamera , Stopcam;
     private CameraPreview mPreview;
     String currentPhotoPath;
     private Camera mCamera;
     private SurfaceHolder mHolder;
+    int bandera=0;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -68,14 +69,24 @@ public class MainActivity extends AppCompatActivity {
         preview.addView(mPreview);
 
         BtnCamera = findViewById(R.id.button_capture);
+        Stopcam = findViewById(R.id.button_pare);
 
         BtnCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    mCamera.takePicture(null,null, mPicture);
+                bandera=1;
+                mCamera.takePicture(null,null, mPicture);
             }
         });
+        Stopcam.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bandera=0;
+            }
+        });
+
     }
+
 
     // Se comienza el desarrollo pra el objeto camara y manejarlo de manera manual
 // se consigue un instanciado de camra
@@ -180,6 +191,9 @@ public class MainActivity extends AppCompatActivity {
                 fos.write(data);
                 fos.close();
                 mCamera.startPreview();
+                if (bandera == 1){
+                    mCamera.takePicture(null,null, mPicture);
+                }
             } catch (FileNotFoundException e) {
 //                Log.d(TAG, "File not found: " + e.getMessage());
             } catch (IOException e) {
